@@ -1,131 +1,125 @@
-import React , {useState} from 'react';
-import './App.css';
-import {ContextConsumer} from "./context";
-import "./firebase";
+import React, { useState } from "react";
+import "./App.css";
+import { ContextConsumer } from "./utils/context";
+import "./utils/firebase";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { useHistory } from 'react-router';
+import { useHistory } from "react-router";
+import { socialLogin } from "./utils/firebase/socialLogin";
 
 // google
 import { GoogleAuthProvider } from "firebase/auth";
-import {  signInWithPopup } from "firebase/auth";
 
 // facebook
 import { FacebookAuthProvider } from "firebase/auth";
-
 
 const providerFB = new FacebookAuthProvider();
 
 // google
 const provider = new GoogleAuthProvider();
 
-
-
-
 function App() {
   let history = useHistory();
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const handlesignInWithEmailAndPassword = async (email, password,handleContext) => {
-
+  const handlesignInWithEmailAndPassword = async (
+    email,
+    password,
+    handleContext
+  ) => {
     try {
       const auth = getAuth();
       const data = await signInWithEmailAndPassword(auth, email, password);
-      // console.log(data);
-     const check = await handleContext(data.user)
-      history.push("/home")
-      } catch (err) {
+      await handleContext(data.user);
+      history.push("/home");
+    } catch (err) {
       console.error(err);
       alert(err.message);
     }
   };
-  const handleGoogle = (handleContext)=>{
-    
-    const auth = getAuth();
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        // This gives you a Google Access Token. You can use it to access the Google API.
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const token = credential.accessToken;
-        // The signed-in user info.
-        const user = result.user;
-        console.log({"google login" : user})
-        const check =  handleContext(user)
-      history.push("/home")
-        // ...
-      }).catch((error) => {
-        // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.email;
-        // The AuthCredential type that was used.
-        const credential = GoogleAuthProvider.credentialFromError(error);
-        console.log({errorCode, errorMessage, email})
-        // ...
-      });
-  }
+  const handleGoogle = (handleContext) => {
+    socialLogin(provider, GoogleAuthProvider, handleContext, history);
+  };
 
-  const handleFacebook = (handleContext)=>{
-    
-    const auth = getAuth();
-    signInWithPopup(auth, providerFB)
-      .then((result) => {
-        // The signed-in user info.
-        const user = result.user;
-    
-        // This gives you a Facebook Access Token. You can use it to access the Facebook API.
-        const credential = FacebookAuthProvider.credentialFromResult(result);
-        const accessToken = credential.accessToken;
-    
-        // ...
-      })
-      .catch((error) => {
-        // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.email;
-        // The AuthCredential type that was used.
-        const credential = FacebookAuthProvider.credentialFromError(error);
-    
-        // ...
-      });
-
-  }
+  const handleFacebook = (handleContext) => {
+    socialLogin(providerFB, FacebookAuthProvider, handleContext, history);
+  };
 
   return (
     <div className="App">
       <header className="App-header">
-       <div className="container">
-         <div className="row">
-         <h1>React firebase with Context API</h1>
+        <div className="container">
+          <div className="row">
+            <h1>React firebase with Context API</h1>
 
-         <div className="col-md-3"></div>
-         <div className="col-md-6">
-           <input type="text" className="form-control mt-5" placeholder="Enter Email" value={email} onChange={(e)=>setEmail(e.target.value)}/>
-           <input type="password" className="form-control mt-3" placeholder="Enter Password" value={password} onChange={(e)=>setPassword(e.target.value)}/>
-           <ContextConsumer>
-          {value =>(<>
-              <button className="btn btn-primary btn-lg btn-block mt-3" onClick={()=>handlesignInWithEmailAndPassword(email,password,value.handleSignInWithCredentials)}>Login with credentials</button>
-           <br/>   <button className="btn btn-primary btn-lg btn-block mt-3" onClick={()=>handleGoogle(value.handleSignInWithCredentials)}>Login with Google</button>
-           <br/>   <button className="btn btn-primary btn-lg btn-block mt-3" onClick={()=>handleFacebook(value.handleSignInWithCredentials)}>Login with Facebook</button>
-         </> )}
-          </ContextConsumer> 
+            <div className="col-md-3"></div>
+            <div className="col-md-6">
+              <input
+                type="text"
+                className="form-control mt-5"
+                placeholder="Enter Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <input
+                type="password"
+                className="form-control mt-3"
+                placeholder="Enter Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <ContextConsumer>
+                {(value) => (
+                  <>
+                    <button
+                      className="btn btn-primary btn-lg btn-block mt-3 credentialsBtn m-3"
+                      onClick={() =>
+                        handlesignInWithEmailAndPassword(
+                          email,
+                          password,
+                          value.handleSignInWithCredentials
+                        )
+                      }
+                    >
+                      Login with credentials
+                    </button>
 
+                    <button
+                      className="btn btn-primary btn-lg btn-block mt-3 thirdPartySignin m-3"
+                      onClick={() =>
+                        handleGoogle(value.handleSignInWithCredentials)
+                      }
+                    >
+                      <img
+                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjzC2JyZDZ_RaWf0qp11K0lcvB6b6kYNMoqtZAQ9hiPZ4cTIOB"
+                        alt="google_image"
+                        width="40"
+                        height="40"
+                      />
+                      <span className="p-20">Sign in with Google </span>
+                    </button>
 
-         
- <ContextConsumer>
-          {value => <h1>{value.user?.email}</h1>}
-          </ContextConsumer>
-         </div>
-         <div className="col-md-3"></div>
-
-         </div>
-         </div>
-       
-
-       
+                    <button
+                      className="btn btn-primary btn-lg btn-block mt-1 thirdPartySignin"
+                      onClick={() =>
+                        handleFacebook(value.handleSignInWithCredentials)
+                      }
+                    >
+                      <img
+                        src="https://scontent.flhe5-1.fna.fbcdn.net/v/t1.6435-9/93173487_3388915277789490_1114510272048922624_n.png?_nc_cat=1&ccb=1-5&_nc_sid=973b4a&_nc_ohc=68ctFzAt9n4AX-9gOVA&_nc_ht=scontent.flhe5-1.fna&oh=63f786f6ab17c92265fe5992329bb752&oe=6194BF79"
+                        alt="facebook_image"
+                        width="40"
+                        height="40"
+                      />
+                      <span className="p-20">Sign in with Facebook </span>
+                    </button>
+                  </>
+                )}
+              </ContextConsumer>
+            </div>
+            <div className="col-md-3"></div>
+          </div>
+        </div>
       </header>
     </div>
   );

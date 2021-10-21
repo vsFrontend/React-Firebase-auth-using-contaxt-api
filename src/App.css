@@ -36,3 +36,19 @@
     transform: rotate(360deg);
   }
 }
+
+.credentialsBtn {
+  border-radius: 0px !important;
+  font-size: 17px !important;
+}
+
+.thirdPartySignin {
+  border-radius: 0px !important;
+  font-size: 17px !important;
+  padding: 2px !important;
+  margin-right: 15px !important;
+}
+
+.p-20 {
+  padding: 20px;
+}
