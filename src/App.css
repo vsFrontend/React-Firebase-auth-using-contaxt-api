@@ -36,3 +36,30 @@
     transform: rotate(360deg);
   }
 }
+
+div > .credentialsBtn {
+  border-radius: 0px;
+  font-size: 17px;
+}
+
+div > .thirdPartySignin {
+  border-radius: 0px;
+  font-size: 17px;
+  padding: 1px;
+  margin-right: 15px;
+}
+
+.p-20 {
+  padding: 20px;
+}
+
+div > .error-text {
+  color: red;
+  font-size: 14px;
+  display: flex;
+}
+
+.icons-size {
+  width: 40px;
+  height: auto;
+}

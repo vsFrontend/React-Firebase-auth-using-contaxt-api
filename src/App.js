@@ -1,131 +1,117 @@
-import React , {useState} from 'react';
-import './App.css';
-import {ContextConsumer} from "./context";
-import "./firebase";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { useHistory } from 'react-router';
-
-// google
+import React, { useState } from "react";
+import { ContextConsumer } from "./utils/context";
+import "./utils/firebase";
+import { useHistory } from "react-router";
+import { socialLogin } from "./utils/firebase/socialLogin";
 import { GoogleAuthProvider } from "firebase/auth";
-import {  signInWithPopup } from "firebase/auth";
-
-// facebook
 import { FacebookAuthProvider } from "firebase/auth";
+import { authService } from "./utils/services/auth.service";
+import { AiFillGoogleSquare } from "react-icons/ai";
+import { IoLogoFacebook } from "react-icons/io";
+import "./App.css";
 
-
-const providerFB = new FacebookAuthProvider();
-
-// google
-const provider = new GoogleAuthProvider();
-
-
-
+const googleprovider = new GoogleAuthProvider();
+const facebookProvider = new FacebookAuthProvider();
 
 function App() {
   let history = useHistory();
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
 
-  const handlesignInWithEmailAndPassword = async (email, password,handleContext) => {
-
-    try {
-      const auth = getAuth();
-      const data = await signInWithEmailAndPassword(auth, email, password);
-      // console.log(data);
-     const check = await handleContext(data.user)
-      history.push("/home")
-      } catch (err) {
-      console.error(err);
-      alert(err.message);
+  const handlesignInWithEmailAndPassword = (handleContext) => {
+    if (email == "") {
+      setEmailError(true);
+    } else {
+      setEmailError(false);
+    }
+    if (password == "") {
+      setPasswordError(true);
+    } else {
+      setPasswordError(false);
+    }
+    if (email !== "" && password !== "") {
+      authService(email, password, handleContext, history);
     }
   };
-  const handleGoogle = (handleContext)=>{
-    
-    const auth = getAuth();
-    signInWithPopup(auth, provider)
-      .then((result) => {
-        // This gives you a Google Access Token. You can use it to access the Google API.
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const token = credential.accessToken;
-        // The signed-in user info.
-        const user = result.user;
-        console.log({"google login" : user})
-        const check =  handleContext(user)
-      history.push("/home")
-        // ...
-      }).catch((error) => {
-        // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.email;
-        // The AuthCredential type that was used.
-        const credential = GoogleAuthProvider.credentialFromError(error);
-        console.log({errorCode, errorMessage, email})
-        // ...
-      });
-  }
 
-  const handleFacebook = (handleContext)=>{
-    
-    const auth = getAuth();
-    signInWithPopup(auth, providerFB)
-      .then((result) => {
-        // The signed-in user info.
-        const user = result.user;
-    
-        // This gives you a Facebook Access Token. You can use it to access the Facebook API.
-        const credential = FacebookAuthProvider.credentialFromResult(result);
-        const accessToken = credential.accessToken;
-    
-        // ...
-      })
-      .catch((error) => {
-        // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.email;
-        // The AuthCredential type that was used.
-        const credential = FacebookAuthProvider.credentialFromError(error);
-    
-        // ...
-      });
+  const handleGoogle = (handleContext) => {
+    socialLogin(googleprovider, GoogleAuthProvider, handleContext, history);
+  };
 
-  }
+  const handleFacebook = (handleContext) => {
+    socialLogin(facebookProvider, FacebookAuthProvider, handleContext, history);
+  };
 
   return (
     <div className="App">
       <header className="App-header">
-       <div className="container">
-         <div className="row">
-         <h1>React firebase with Context API</h1>
+        <div className="container">
+          <div className="row">
+            <h1>React firebase with Context API</h1>
 
-         <div className="col-md-3"></div>
-         <div className="col-md-6">
-           <input type="text" className="form-control mt-5" placeholder="Enter Email" value={email} onChange={(e)=>setEmail(e.target.value)}/>
-           <input type="password" className="form-control mt-3" placeholder="Enter Password" value={password} onChange={(e)=>setPassword(e.target.value)}/>
-           <ContextConsumer>
-          {value =>(<>
-              <button className="btn btn-primary btn-lg btn-block mt-3" onClick={()=>handlesignInWithEmailAndPassword(email,password,value.handleSignInWithCredentials)}>Login with credentials</button>
-           <br/>   <button className="btn btn-primary btn-lg btn-block mt-3" onClick={()=>handleGoogle(value.handleSignInWithCredentials)}>Login with Google</button>
-           <br/>   <button className="btn btn-primary btn-lg btn-block mt-3" onClick={()=>handleFacebook(value.handleSignInWithCredentials)}>Login with Facebook</button>
-         </> )}
-          </ContextConsumer> 
+            <div className="col-md-3"></div>
+            <div className="col-md-6">
+              <input
+                type="text"
+                className="form-control mt-5"
+                placeholder="Enter Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              {emailError && <p className="error-text">* Email is Required </p>}
+              <input
+                type="password"
+                className="form-control mt-3"
+                placeholder="Enter Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              {passwordError && (
+                <p className="error-text">* Password is Required </p>
+              )}
 
+              <ContextConsumer>
+                {(value) => (
+                  <>
+                    <button
+                      className="btn btn-primary btn-lg btn-block mt-3 credentialsBtn m-3"
+                      onClick={() =>
+                        handlesignInWithEmailAndPassword(
+                          value.handleSignInWithCredentials
+                        )
+                      }
+                    >
+                      Login with credentials
+                    </button>
 
-         
- <ContextConsumer>
-          {value => <h1>{value.user?.email}</h1>}
-          </ContextConsumer>
-         </div>
-         <div className="col-md-3"></div>
+                    <button
+                      className="btn btn-primary btn-lg btn-block mt-3 thirdPartySignin m-3"
+                      onClick={() =>
+                        handleGoogle(value.handleSignInWithCredentials)
+                      }
+                    >
+                      <AiFillGoogleSquare className="icons-size" />
+                      <span className="p-20">Sign in with Google </span>
+                    </button>
 
-         </div>
-         </div>
-       
-
-       
+                    <button
+                      className="btn btn-primary btn-lg btn-block mt-1 thirdPartySignin"
+                      onClick={() =>
+                        handleFacebook(value.handleSignInWithCredentials)
+                      }
+                    >
+                      <IoLogoFacebook className="icons-size" />
+                      <span className="p-20">Sign in with Facebook </span>
+                    </button>
+                  </>
+                )}
+              </ContextConsumer>
+            </div>
+            <div className="col-md-3"></div>
+          </div>
+        </div>
       </header>
     </div>
   );
