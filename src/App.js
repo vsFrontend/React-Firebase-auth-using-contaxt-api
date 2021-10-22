@@ -1,48 +1,47 @@
 import React, { useState } from "react";
-import "./App.css";
 import { ContextConsumer } from "./utils/context";
 import "./utils/firebase";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useHistory } from "react-router";
 import { socialLogin } from "./utils/firebase/socialLogin";
-
-// google
 import { GoogleAuthProvider } from "firebase/auth";
-
-// facebook
 import { FacebookAuthProvider } from "firebase/auth";
+import { authService } from "./utils/services/auth.service";
+import { AiFillGoogleSquare } from "react-icons/ai";
+import { IoLogoFacebook } from "react-icons/io";
+import "./App.css";
 
-const providerFB = new FacebookAuthProvider();
-
-// google
-const provider = new GoogleAuthProvider();
+const googleprovider = new GoogleAuthProvider();
+const facebookProvider = new FacebookAuthProvider();
 
 function App() {
   let history = useHistory();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
 
-  const handlesignInWithEmailAndPassword = async (
-    email,
-    password,
-    handleContext
-  ) => {
-    try {
-      const auth = getAuth();
-      const data = await signInWithEmailAndPassword(auth, email, password);
-      await handleContext(data.user);
-      history.push("/home");
-    } catch (err) {
-      console.error(err);
-      alert(err.message);
+  const handlesignInWithEmailAndPassword = (handleContext) => {
+    if (email == "") {
+      setEmailError(true);
+    } else {
+      setEmailError(false);
+    }
+    if (password == "") {
+      setPasswordError(true);
+    } else {
+      setPasswordError(false);
+    }
+    if (email !== "" && password !== "") {
+      authService(email, password, handleContext, history);
     }
   };
+
   const handleGoogle = (handleContext) => {
-    socialLogin(provider, GoogleAuthProvider, handleContext, history);
+    socialLogin(googleprovider, GoogleAuthProvider, handleContext, history);
   };
 
   const handleFacebook = (handleContext) => {
-    socialLogin(providerFB, FacebookAuthProvider, handleContext, history);
+    socialLogin(facebookProvider, FacebookAuthProvider, handleContext, history);
   };
 
   return (
@@ -61,6 +60,7 @@ function App() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+              {emailError && <p className="error-text">* Email is Required </p>}
               <input
                 type="password"
                 className="form-control mt-3"
@@ -68,6 +68,10 @@ function App() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              {passwordError && (
+                <p className="error-text">* Password is Required </p>
+              )}
+
               <ContextConsumer>
                 {(value) => (
                   <>
@@ -75,8 +79,6 @@ function App() {
                       className="btn btn-primary btn-lg btn-block mt-3 credentialsBtn m-3"
                       onClick={() =>
                         handlesignInWithEmailAndPassword(
-                          email,
-                          password,
                           value.handleSignInWithCredentials
                         )
                       }
@@ -90,12 +92,7 @@ function App() {
                         handleGoogle(value.handleSignInWithCredentials)
                       }
                     >
-                      <img
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjzC2JyZDZ_RaWf0qp11K0lcvB6b6kYNMoqtZAQ9hiPZ4cTIOB"
-                        alt="google_image"
-                        width="40"
-                        height="40"
-                      />
+                      <AiFillGoogleSquare className="icons-size" />
                       <span className="p-20">Sign in with Google </span>
                     </button>
 
@@ -105,12 +102,7 @@ function App() {
                         handleFacebook(value.handleSignInWithCredentials)
                       }
                     >
-                      <img
-                        src="https://scontent.flhe5-1.fna.fbcdn.net/v/t1.6435-9/93173487_3388915277789490_1114510272048922624_n.png?_nc_cat=1&ccb=1-5&_nc_sid=973b4a&_nc_ohc=68ctFzAt9n4AX-9gOVA&_nc_ht=scontent.flhe5-1.fna&oh=63f786f6ab17c92265fe5992329bb752&oe=6194BF79"
-                        alt="facebook_image"
-                        width="40"
-                        height="40"
-                      />
+                      <IoLogoFacebook className="icons-size" />
                       <span className="p-20">Sign in with Facebook </span>
                     </button>
                   </>

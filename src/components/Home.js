@@ -1,10 +1,9 @@
 import React from "react";
-import "../App.css";
 import { ContextConsumer } from "../utils/context";
 import "../utils/firebase";
 import { getAuth, signOut } from "firebase/auth";
-
 import { useHistory } from "react-router";
+import "../App.css";
 
 export default function Home() {
   let history = useHistory();
